@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/handlers"
 )
@@ -16,9 +17,14 @@ func main() {
 	http.Handle("/categories", categoryHandler)
 	http.Handle("/categories/", categoryHandler)
 
+	// Get port from environment variable (Railway compatible)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default port for local development
+	}
+
 	// Start server
-	port := ":8080"
-	fmt.Printf("🚀 Server is running on http://localhost%s\n", port)
+	fmt.Printf("🚀 Server is running on port %s\n", port)
 	fmt.Println("📚 Available endpoints:")
 	fmt.Println("   GET    /categories      - Get all categories")
 	fmt.Println("   POST   /categories      - Create a category")
@@ -27,5 +33,5 @@ func main() {
 	fmt.Println("   DELETE /categories/{id} - Delete a category by ID")
 	fmt.Println()
 
-	log.Fatal(http.ListenAndServe(port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
