@@ -1,3 +1,4 @@
-kasir-api
-kasir-api.exe
+kasir
+kasir.exe
 *.log
+.env
