@@ -39,15 +39,32 @@ func main() {
 		DBConn: viper.GetString("DB_CONN"),
 	}
 
+	// Fallback ke os.Getenv kalo Viper gak dapet (untuk Railway)
+	if config.DBConn == "" {
+		config.DBConn = os.Getenv("DB_CONN")
+		log.Println("Using DB_CONN from os.Getenv")
+	}
+	if config.Port == "" {
+		config.Port = os.Getenv("PORT")
+	}
+
 	// Default port kalo gak diset
 	if config.Port == "" {
 		config.Port = "8080"
+	}
+
+	// Debug: log config values
+	log.Printf("PORT: %s", config.Port)
+	log.Printf("DB_CONN length: %d", len(config.DBConn))
+	if config.DBConn == "" {
+		log.Fatal("DB_CONN is empty! Please set DB_CONN environment variable")
 	}
 
 	// ==================== SETUP DATABASE ====================
 	db, err := database.InitDB(config.DBConn)
 	if err != nil {
 		log.Fatal("Gagal connect ke database:", err)
+
 	}
 	defer db.Close()
 
