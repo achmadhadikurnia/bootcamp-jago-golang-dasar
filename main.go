@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/database"
-	_ "github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/docs"
+	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/docs"
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/handlers"
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/repositories"
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/services"
@@ -74,7 +74,8 @@ func main() {
 		})
 	})
 
-	// Swagger docs - host kosong = otomatis pakai URL browser
+	// Swagger docs - host kosong = otomatis pakai URL browser saat ini
+	docs.SwaggerInfo.Host = ""
 	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	// Start server
