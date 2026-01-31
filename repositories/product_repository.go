@@ -18,7 +18,9 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 
 // GetAll buat ambil semua products dari database
 func (r *ProductRepository) GetAll() ([]models.Product, error) {
-	query := "SELECT id, name, price, stock, category_id FROM products"
+	query := `SELECT p.id, p.name, p.price, p.stock, p.category_id, COALESCE(c.name, '') as category_name
+			  FROM products p
+			  LEFT JOIN categories c ON p.category_id = c.id`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -28,7 +30,7 @@ func (r *ProductRepository) GetAll() ([]models.Product, error) {
 	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
-		err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID)
+		err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &p.CategoryName)
 		if err != nil {
 			return nil, err
 		}
@@ -40,10 +42,13 @@ func (r *ProductRepository) GetAll() ([]models.Product, error) {
 
 // GetByID buat ambil product berdasarkan ID
 func (r *ProductRepository) GetByID(id int) (*models.Product, error) {
-	query := "SELECT id, name, price, stock, category_id FROM products WHERE id = $1"
+	query := `SELECT p.id, p.name, p.price, p.stock, p.category_id, COALESCE(c.name, '') as category_name
+			  FROM products p
+			  LEFT JOIN categories c ON p.category_id = c.id
+			  WHERE p.id = $1`
 
 	var p models.Product
-	err := r.db.QueryRow(query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID)
+	err := r.db.QueryRow(query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &p.CategoryName)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("product not found")
 	}

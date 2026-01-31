@@ -445,6 +445,9 @@ const docTemplate = `{
                 "category_id": {
                     "type": "integer"
                 },
+                "category_name": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
