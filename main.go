@@ -23,82 +23,50 @@ import (
 // @host localhost:8080
 // @BasePath /
 
-// Config struct buat nyimpen konfigurasi aplikasi
+// Config
 type Config struct {
 	Port   string `mapstructure:"PORT"`
 	DBConn string `mapstructure:"DB_CONN"`
 }
 
 func main() {
-	// ==================== LOAD CONFIG ====================
-	// Load environment variables pake Viper
+	// Load config dengan Viper
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	// Cek kalo ada file .env, baca dari situ
 	if _, err := os.Stat(".env"); err == nil {
 		viper.SetConfigFile(".env")
 		_ = viper.ReadInConfig()
 	}
 
-	// Ambil config dari environment
 	config := Config{
 		Port:   viper.GetString("PORT"),
 		DBConn: viper.GetString("DB_CONN"),
 	}
 
-	// Fallback ke os.Getenv kalo Viper gak dapet (untuk Railway)
-	if config.DBConn == "" {
-		config.DBConn = os.Getenv("DB_CONN")
-		log.Println("Using DB_CONN from os.Getenv")
-	}
-	if config.Port == "" {
-		config.Port = os.Getenv("PORT")
-	}
-
-	// Default port kalo gak diset
-	if config.Port == "" {
-		config.Port = "8080"
-	}
-
-	// Debug: log config values
-	log.Printf("PORT: %s", config.Port)
-	log.Printf("DB_CONN length: %d", len(config.DBConn))
-	if config.DBConn == "" {
-		log.Fatal("DB_CONN is empty! Please set DB_CONN environment variable")
-	}
-
-	// ==================== SETUP DATABASE ====================
+	// Setup database
 	db, err := database.InitDB(config.DBConn)
 	if err != nil {
-		log.Fatal("Gagal connect ke database:", err)
-
+		log.Fatal("Failed to initialize database:", err)
 	}
 	defer db.Close()
 
-	// ==================== DEPENDENCY INJECTION ====================
-	// Ini kayak Manager di restoran yang kenalin Pelayan, Koki, sama Anak Gudang
-
-	// Product: Repository -> Service -> Handler
+	// Dependency Injection
 	productRepo := repositories.NewProductRepository(db)
 	productService := services.NewProductService(productRepo)
 	productHandler := handlers.NewProductHandler(productService)
 
-	// Category: Repository -> Service -> Handler
 	categoryRepo := repositories.NewCategoryRepository(db)
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
-	// ==================== SETUP ROUTES ====================
-	// Product routes
+	// Setup routes
 	http.HandleFunc("/api/products", productHandler.HandleProducts)
 	http.HandleFunc("/api/products/", productHandler.HandleProductByID)
 
-	// Category routes
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
 
-	// Health check
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
@@ -107,22 +75,16 @@ func main() {
 		})
 	})
 
-	// Swagger documentation
+	// Swagger docs
 	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	// ==================== START SERVER ====================
+	// Start server
 	addr := "0.0.0.0:" + config.Port
-	fmt.Println("Server jalan di", addr)
-	fmt.Println("Available endpoints:")
-	fmt.Println("  GET/POST   /api/products")
-	fmt.Println("  GET/PUT/DELETE /api/products/{id}")
-	fmt.Println("  GET/POST   /api/categories")
-	fmt.Println("  GET/PUT/DELETE /api/categories/{id}")
-	fmt.Println("  GET        /health")
-	fmt.Println("  GET        /swagger/index.html")
+	fmt.Println("Server running di", addr)
+	fmt.Println("Swagger: http://localhost:" + config.Port + "/swagger/index.html")
 
 	err = http.ListenAndServe(addr, nil)
 	if err != nil {
-		fmt.Println("Waduh, server gagal jalan:", err)
+		fmt.Println("gagal running server", err)
 	}
 }
