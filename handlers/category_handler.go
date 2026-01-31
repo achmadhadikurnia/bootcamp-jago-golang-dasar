@@ -31,7 +31,15 @@ func (h *CategoryHandler) HandleCategories(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// GetAll buat handle GET /api/categories
+// GetAll godoc
+// @Summary Get all categories
+// @Description Get all categories from database
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Category
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/categories [get]
 func (h *CategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.service.GetAll()
 	if err != nil {
@@ -43,7 +51,16 @@ func (h *CategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(categories)
 }
 
-// Create buat handle POST /api/categories
+// Create godoc
+// @Summary Create a new category
+// @Description Create a new category in database
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Param category body models.Category true "Category data"
+// @Success 201 {object} models.Category
+// @Failure 400 {string} string "Bad Request"
+// @Router /api/categories [post]
 func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var category models.Category
 	err := json.NewDecoder(r.Body).Decode(&category)
@@ -77,7 +94,17 @@ func (h *CategoryHandler) HandleCategoryByID(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// GetByID buat handle GET /api/categories/{id}
+// GetByID godoc
+// @Summary Get category by ID
+// @Description Get a single category by ID
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} models.Category
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Category not found"
+// @Router /api/categories/{id} [get]
 func (h *CategoryHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
@@ -96,7 +123,17 @@ func (h *CategoryHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
-// Update buat handle PUT /api/categories/{id}
+// Update godoc
+// @Summary Update a category
+// @Description Update category by ID
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param category body models.Category true "Category data"
+// @Success 200 {object} models.Category
+// @Failure 400 {string} string "Bad Request"
+// @Router /api/categories/{id} [put]
 func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
@@ -123,7 +160,17 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
-// Delete buat handle DELETE /api/categories/{id}
+// Delete godoc
+// @Summary Delete a category
+// @Description Delete category by ID
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/categories/{id} [delete]
 func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)

@@ -9,11 +9,19 @@ import (
 	"strings"
 
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/database"
+	_ "github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/docs"
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/handlers"
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/repositories"
 	"github.com/achmadhadikurnia/bootcamp-jago-golang-dasar/services"
 	"github.com/spf13/viper"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+// @title Kasir API
+// @version 1.0
+// @description API untuk sistem kasir dengan manajemen produk dan kategori
+// @host localhost:8080
+// @BasePath /
 
 // Config struct buat nyimpen konfigurasi aplikasi
 type Config struct {
@@ -99,6 +107,9 @@ func main() {
 		})
 	})
 
+	// Swagger documentation
+	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+
 	// ==================== START SERVER ====================
 	addr := "0.0.0.0:" + config.Port
 	fmt.Println("Server jalan di", addr)
@@ -108,6 +119,7 @@ func main() {
 	fmt.Println("  GET/POST   /api/categories")
 	fmt.Println("  GET/PUT/DELETE /api/categories/{id}")
 	fmt.Println("  GET        /health")
+	fmt.Println("  GET        /swagger/index.html")
 
 	err = http.ListenAndServe(addr, nil)
 	if err != nil {

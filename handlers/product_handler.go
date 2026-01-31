@@ -31,7 +31,15 @@ func (h *ProductHandler) HandleProducts(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// GetAll buat handle GET /api/products
+// GetAll godoc
+// @Summary Get all products
+// @Description Get all products from database
+// @Tags products
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Product
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/products [get]
 func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	products, err := h.service.GetAll()
 	if err != nil {
@@ -43,7 +51,16 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(products)
 }
 
-// Create buat handle POST /api/products
+// Create godoc
+// @Summary Create a new product
+// @Description Create a new product in database
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param product body models.Product true "Product data"
+// @Success 201 {object} models.Product
+// @Failure 400 {string} string "Bad Request"
+// @Router /api/products [post]
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
 	err := json.NewDecoder(r.Body).Decode(&product)
@@ -77,7 +94,17 @@ func (h *ProductHandler) HandleProductByID(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// GetByID buat handle GET /api/products/{id}
+// GetByID godoc
+// @Summary Get product by ID
+// @Description Get a single product by ID
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} models.Product
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Product not found"
+// @Router /api/products/{id} [get]
 func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/products/")
 	id, err := strconv.Atoi(idStr)
@@ -96,7 +123,17 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(product)
 }
 
-// Update buat handle PUT /api/products/{id}
+// Update godoc
+// @Summary Update a product
+// @Description Update product by ID
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Param product body models.Product true "Product data"
+// @Success 200 {object} models.Product
+// @Failure 400 {string} string "Bad Request"
+// @Router /api/products/{id} [put]
 func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/products/")
 	id, err := strconv.Atoi(idStr)
@@ -123,7 +160,17 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(product)
 }
 
-// Delete buat handle DELETE /api/products/{id}
+// Delete godoc
+// @Summary Delete a product
+// @Description Delete product by ID
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/products/{id} [delete]
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/products/")
 	id, err := strconv.Atoi(idStr)
