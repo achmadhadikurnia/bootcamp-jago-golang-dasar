@@ -20,29 +20,12 @@ import (
 // @title Kasir API
 // @version 1.0
 // @description API untuk sistem kasir dengan manajemen produk dan kategori
-// @host localhost:8080
 // @BasePath /
 
 // Config
 type Config struct {
 	Port   string `mapstructure:"PORT"`
 	DBConn string `mapstructure:"DB_CONN"`
-}
-
-// CORS middleware untuk handle cross-origin requests
-func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next(w, r)
-	}
 }
 
 func main() {
@@ -76,28 +59,27 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
-	// Setup routes dengan CORS
-	http.HandleFunc("/api/products", corsMiddleware(productHandler.HandleProducts))
-	http.HandleFunc("/api/products/", corsMiddleware(productHandler.HandleProductByID))
+	// Setup routes
+	http.HandleFunc("/api/products", productHandler.HandleProducts)
+	http.HandleFunc("/api/products/", productHandler.HandleProductByID)
 
-	http.HandleFunc("/api/categories", corsMiddleware(categoryHandler.HandleCategories))
-	http.HandleFunc("/api/categories/", corsMiddleware(categoryHandler.HandleCategoryByID))
+	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
+	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
 
-	http.HandleFunc("/health", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
 			"status":  "OK",
 			"message": "API Running",
 		})
-	}))
+	})
 
-	// Swagger docs
+	// Swagger docs - host kosong = otomatis pakai URL browser
 	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	// Start server
 	addr := "0.0.0.0:" + config.Port
 	fmt.Println("Server running di", addr)
-	fmt.Println("Swagger: http://localhost:" + config.Port + "/swagger/index.html")
 
 	err = http.ListenAndServe(addr, nil)
 	if err != nil {
