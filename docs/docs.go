@@ -219,6 +219,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/checkout": {
+            "post": {
+                "description": "Membuat transaksi baru dengan multiple items. Akan mengurangi stock produk dan menghitung total amount.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Proses checkout transaksi",
+                "parameters": [
+                    {
+                        "description": "Data checkout berisi items (product_id dan quantity)",
+                        "name": "checkout",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CheckoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaksi berhasil dibuat",
+                        "schema": {
+                            "$ref": "#/definitions/models.Transaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - items kosong atau product tidak ditemukan",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - stock tidak cukup",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/products": {
             "get": {
                 "description": "Get all products from database",
@@ -232,6 +278,14 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Get all products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by product name",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -422,6 +476,86 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/report": {
+            "get": {
+                "description": "Mendapatkan ringkasan penjualan dalam rentang tanggal tertentu. Optional challenge dari Bootcamp Session 3.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Laporan penjualan berdasarkan periode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tanggal mulai (format: YYYY-MM-DD, contoh: 2026-01-01)",
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tanggal akhir (format: YYYY-MM-DD, contoh: 2026-02-01)",
+                        "name": "end_date",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Laporan berisi total_revenue, total_transaksi, produk_terlaris",
+                        "schema": {
+                            "$ref": "#/definitions/models.DailySalesReport"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - format tanggal salah",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/report/hari-ini": {
+            "get": {
+                "description": "Mendapatkan ringkasan penjualan hari ini: total revenue, total transaksi, dan produk terlaris.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Laporan penjualan hari ini",
+                "responses": {
+                    "200": {
+                        "description": "Laporan berisi total_revenue, total_transaksi, produk_terlaris",
+                        "schema": {
+                            "$ref": "#/definitions/models.DailySalesReport"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -436,6 +570,42 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "models.CheckoutItem": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.CheckoutRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CheckoutItem"
+                    }
+                }
+            }
+        },
+        "models.DailySalesReport": {
+            "type": "object",
+            "properties": {
+                "produk_terlaris": {
+                    "$ref": "#/definitions/models.TopProduct"
+                },
+                "total_revenue": {
+                    "type": "integer"
+                },
+                "total_transaksi": {
+                    "type": "integer"
                 }
             }
         },
@@ -461,6 +631,60 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "models.TopProduct": {
+            "type": "object",
+            "properties": {
+                "nama": {
+                    "type": "string"
+                },
+                "qty_terjual": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Transaction": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TransactionDetail"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "total_amount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TransactionDetail": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "subtotal": {
+                    "type": "integer"
+                },
+                "transaction_id": {
+                    "type": "integer"
+                }
+            }
         }
     }
 }`
@@ -472,7 +696,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Kasir API",
-	Description:      "API untuk sistem kasir dengan manajemen produk dan kategori",
+	Description:      "API untuk sistem kasir dengan fitur manajemen produk, kategori, transaksi/checkout, dan laporan penjualan.\n\n## Fitur Utama:\n- **Products**: CRUD produk dengan search by name\n- **Categories**: CRUD kategori produk\n- **Checkout**: Proses transaksi pembelian\n- **Reports**: Laporan penjualan harian dan berdasarkan periode",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

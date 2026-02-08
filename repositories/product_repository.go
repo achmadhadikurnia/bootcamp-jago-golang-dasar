@@ -17,11 +17,18 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 }
 
 // GetAll buat ambil semua products dari database
-func (r *ProductRepository) GetAll() ([]models.Product, error) {
+func (r *ProductRepository) GetAll(nameFilter string) ([]models.Product, error) {
 	query := `SELECT p.id, p.name, p.price, p.stock, p.category_id, COALESCE(c.name, '') as category_name
 			  FROM products p
 			  LEFT JOIN categories c ON p.category_id = c.id`
-	rows, err := r.db.Query(query)
+
+	args := []interface{}{}
+	if nameFilter != "" {
+		query += " WHERE p.name ILIKE $1"
+		args = append(args, "%"+nameFilter+"%")
+	}
+
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

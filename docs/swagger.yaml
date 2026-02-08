@@ -9,6 +9,29 @@ definitions:
       name:
         type: string
     type: object
+  models.CheckoutItem:
+    properties:
+      product_id:
+        type: integer
+      quantity:
+        type: integer
+    type: object
+  models.CheckoutRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.CheckoutItem'
+        type: array
+    type: object
+  models.DailySalesReport:
+    properties:
+      produk_terlaris:
+        $ref: '#/definitions/models.TopProduct'
+      total_revenue:
+        type: integer
+      total_transaksi:
+        type: integer
+    type: object
   models.Product:
     properties:
       category_id:
@@ -24,9 +47,51 @@ definitions:
       stock:
         type: integer
     type: object
+  models.TopProduct:
+    properties:
+      nama:
+        type: string
+      qty_terjual:
+        type: integer
+    type: object
+  models.Transaction:
+    properties:
+      created_at:
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/models.TransactionDetail'
+        type: array
+      id:
+        type: integer
+      total_amount:
+        type: integer
+    type: object
+  models.TransactionDetail:
+    properties:
+      id:
+        type: integer
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        type: integer
+      transaction_id:
+        type: integer
+    type: object
 info:
   contact: {}
-  description: API untuk sistem kasir dengan manajemen produk dan kategori
+  description: |-
+    API untuk sistem kasir dengan fitur manajemen produk, kategori, transaksi/checkout, dan laporan penjualan.
+
+    ## Fitur Utama:
+    - **Products**: CRUD produk dengan search by name
+    - **Categories**: CRUD kategori produk
+    - **Checkout**: Proses transaksi pembelian
+    - **Reports**: Laporan penjualan harian dan berdasarkan periode
   title: Kasir API
   version: "1.0"
 paths:
@@ -165,11 +230,47 @@ paths:
       summary: Update a category
       tags:
       - categories
+  /api/checkout:
+    post:
+      consumes:
+      - application/json
+      description: Membuat transaksi baru dengan multiple items. Akan mengurangi stock
+        produk dan menghitung total amount.
+      parameters:
+      - description: Data checkout berisi items (product_id dan quantity)
+        in: body
+        name: checkout
+        required: true
+        schema:
+          $ref: '#/definitions/models.CheckoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaksi berhasil dibuat
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "400":
+          description: Bad Request - items kosong atau product tidak ditemukan
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error - stock tidak cukup
+          schema:
+            type: string
+      summary: Proses checkout transaksi
+      tags:
+      - transactions
   /api/products:
     get:
       consumes:
       - application/json
       description: Get all products from database
+      parameters:
+      - description: Filter by product name
+        in: query
+        name: name
+        type: string
       produces:
       - application/json
       responses:
@@ -300,4 +401,59 @@ paths:
       summary: Update a product
       tags:
       - products
+  /api/report:
+    get:
+      consumes:
+      - application/json
+      description: Mendapatkan ringkasan penjualan dalam rentang tanggal tertentu.
+        Optional challenge dari Bootcamp Session 3.
+      parameters:
+      - description: 'Tanggal mulai (format: YYYY-MM-DD, contoh: 2026-01-01)'
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: 'Tanggal akhir (format: YYYY-MM-DD, contoh: 2026-02-01)'
+        in: query
+        name: end_date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Laporan berisi total_revenue, total_transaksi, produk_terlaris
+          schema:
+            $ref: '#/definitions/models.DailySalesReport'
+        "400":
+          description: Bad Request - format tanggal salah
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Laporan penjualan berdasarkan periode
+      tags:
+      - reports
+  /api/report/hari-ini:
+    get:
+      consumes:
+      - application/json
+      description: 'Mendapatkan ringkasan penjualan hari ini: total revenue, total
+        transaksi, dan produk terlaris.'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Laporan berisi total_revenue, total_transaksi, produk_terlaris
+          schema:
+            $ref: '#/definitions/models.DailySalesReport'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Laporan penjualan hari ini
+      tags:
+      - reports
 swagger: "2.0"

@@ -19,7 +19,13 @@ import (
 
 // @title Kasir API
 // @version 1.0
-// @description API untuk sistem kasir dengan manajemen produk dan kategori
+// @description API untuk sistem kasir dengan fitur manajemen produk, kategori, transaksi/checkout, dan laporan penjualan.
+// @description
+// @description ## Fitur Utama:
+// @description - **Products**: CRUD produk dengan search by name
+// @description - **Categories**: CRUD kategori produk
+// @description - **Checkout**: Proses transaksi pembelian
+// @description - **Reports**: Laporan penjualan harian dan berdasarkan periode
 // @BasePath /
 
 // Config
@@ -59,12 +65,29 @@ func main() {
 	categoryService := services.NewCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
+	// Transaction
+	transactionRepo := repositories.NewTransactionRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+
+	// Report
+	reportRepo := repositories.NewReportRepository(db)
+	reportService := services.NewReportService(reportRepo)
+	reportHandler := handlers.NewReportHandler(reportService)
+
 	// Setup routes
 	http.HandleFunc("/api/products", productHandler.HandleProducts)
 	http.HandleFunc("/api/products/", productHandler.HandleProductByID)
 
 	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
+
+	// Transaction routes
+	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout)
+
+	// Report routes
+	http.HandleFunc("/api/report/hari-ini", reportHandler.HandleReportHariIni)
+	http.HandleFunc("/api/report", reportHandler.HandleReport)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

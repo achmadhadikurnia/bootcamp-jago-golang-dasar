@@ -37,11 +37,14 @@ func (h *ProductHandler) HandleProducts(w http.ResponseWriter, r *http.Request) 
 // @Tags products
 // @Accept json
 // @Produce json
+// @Param name query string false "Filter by product name"
 // @Success 200 {array} models.Product
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/products [get]
 func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	products, err := h.service.GetAll()
+	name := r.URL.Query().Get("name")
+
+	products, err := h.service.GetAll(name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
